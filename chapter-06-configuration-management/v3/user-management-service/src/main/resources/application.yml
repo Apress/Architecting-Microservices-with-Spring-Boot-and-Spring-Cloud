@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: user-management-service
+  config:
+    import: "optional:configserver:http://${vault.config-server.auth.username:configuser}:${vault.config-server.auth.password:configpass}@localhost:8888"
+
+---
+# Docker profile configuration  
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:http://${vault.config-server.auth.username:configuser}:${vault.config-server.auth.password:configpass}@config-server:8888"

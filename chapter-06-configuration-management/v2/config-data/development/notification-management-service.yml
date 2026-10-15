@@ -1,0 +1,75 @@
+# Notification Management Service Configuration for Development Environment
+server:
+  port: 0  # Dynamic port assignment
+
+# EV Charging Business Configuration - Development Values
+chargeroute:
+  notification:
+    # Development - frequent and detailed notifications
+    email:
+      enabled: true
+      smtp-host: localhost
+      smtp-port: 1025  # MailHog for dev testing
+      username: ""
+      password: ""
+      from-address: "dev-noreply@chargeroute.com"
+      from-name: "ChargeRoute Development"
+    sms:
+      enabled: false  # Disabled in dev to avoid costs
+      provider: "mock"
+      api-key: "dev-key"
+    push:
+      enabled: true
+      provider: "mock"
+      api-key: "dev-key"
+    templates:
+      # Development templates with debug info
+      session-started: "Dev: Charging session started at {stationName}. Session ID: {sessionId}"
+      session-completed: "Dev: Charging complete! Energy: {energyConsumed}kWh, Cost: ${cost}"
+      session-error: "Dev: Session error at {stationName}. Error: {errorMessage}"
+      payment-processed: "Dev: Payment of ${amount} processed for session {sessionId}"
+      membership-upgraded: "Dev: Membership upgraded to {membershipType}"
+      account-locked: "Dev: Account locked after {attempts} failed login attempts"
+    preferences:
+      # Development - allow all notification types
+      allow-email: true
+      allow-sms: false
+      allow-push: true
+      quiet-hours-enabled: false  # No quiet hours in dev
+    delivery:
+      # Development - immediate delivery
+      batch-size: 5
+      retry-attempts: 2
+      retry-delay-seconds: 5
+      enable-dead-letter-queue: true
+
+# Service-to-Service Communication
+integration:
+  services:
+    user-management:
+      base-url: http://user-management-service
+      timeout-ms: 1500
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://chargeroute:Admin123!@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Development - faster heartbeat
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+
+# Development logging
+logging:
+  level:
+    com.chargeroute.notification: DEBUG
+    org.springframework.web: DEBUG
+  file:
+    name: logs/notification-management-service.log
+    max-size: 100MB
+    max-history: 30

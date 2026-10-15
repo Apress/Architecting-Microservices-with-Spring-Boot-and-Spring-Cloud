@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: user-management-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000/realms/ev-charging
+  # R2DBC Configuration - Reactive database connection
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5433/userdb
+    username: userservice
+    password: ${spring.datasource.password}
+    pool:
+      initial-size: 10
+      max-size: 50
+      max-idle-time: 30m
+      max-acquire-time: 3s
+  # Flyway uses its own JDBC connection (R2DBC apps don't auto-configure a DataSource)
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://localhost:5433/userdb
+    user: userservice
+    password: ${spring.datasource.password}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka.username}:${eureka.password}@localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}

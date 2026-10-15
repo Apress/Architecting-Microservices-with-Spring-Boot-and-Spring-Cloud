@@ -1,0 +1,41 @@
+# Eureka Server Configuration for Development Environment
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eureka-server
+  security:
+    user:
+      name: chargeroute
+      password: Admin123!
+
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  server:
+    # Development settings - more lenient
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 15000
+    renewal-threshold-update-interval-ms: 15000
+    expected-client-renewal-interval-seconds: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.netflix.eureka: DEBUG
+    com.netflix.discovery: DEBUG

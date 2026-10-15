@@ -1,0 +1,47 @@
+# Test Configuration for Eureka Discovery Service
+# This configuration is used during unit and integration testing
+
+server:
+  port: 0  # Random port for testing
+
+spring:
+  application:
+    name: eureka-discovery-service
+  security:
+    user:
+      name: chargeroute
+      password: Admin123!
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    # Disable client features for Eureka server in test
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${spring.security.user.name}:${spring.security.user.password}@localhost:${server.port}/eureka/
+  server:
+    # Faster eviction for testing
+    eviction-interval-timer-in-ms: 1000
+    # Disable self-preservation for predictable testing
+    enable-self-preservation: false
+    # Faster response cache updates
+    response-cache-update-interval-ms: 1000
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.netflix.eureka: DEBUG
+    com.netflix.discovery: DEBUG
+    com.chargeroute: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

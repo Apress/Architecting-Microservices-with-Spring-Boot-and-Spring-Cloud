@@ -1,0 +1,160 @@
+# API Gateway Configuration for Development Environment
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # Global CORS configuration for development
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:3000"  # React web app
+                  - "http://localhost:3001"  # Admin dashboard
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: '*'
+                allowCredentials: true
+                maxAge: 3600
+
+          # Default filters for development
+          default-filters:
+            - name: DedupeResponseHeader
+              args:
+                name: Access-Control-Allow-Origin Access-Control-Allow-Credentials
+            - name: AddRequestHeader
+              args:
+                name: X-Gateway-Name
+                value: ChargeRoute-API-Gateway-Dev
+            - name: AddRequestHeader
+              args:
+                name: X-Request-ID
+                value: "${random.uuid}"
+            - name: AddRequestHeader
+              args:
+                name: X-Environment
+                value: development
+
+          # Enable automatic route discovery from Eureka
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+
+          # Custom route definitions
+          routes:
+            # User Management Service Routes
+            - id: user-service-route
+              uri: lb://user-management-service
+              predicates:
+                - Path=/api/users/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: user-service-cb
+                    fallbackUri: forward:/fallback/users
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: user-management
+
+            # Charge Unit Management Service Routes
+            - id: charge-unit-service-route
+              uri: lb://charge-unit-management-service
+              predicates:
+                - Path=/api/charge-units/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: charge-unit-service-cb
+                    fallbackUri: forward:/fallback/charge-units
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: charge-unit-management
+
+            # Session Management Service Routes
+            - id: session-service-route
+              uri: lb://session-management-service
+              predicates:
+                - Path=/api/sessions/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: session-service-cb
+                    fallbackUri: forward:/fallback/sessions
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: session-management
+
+            # Notification Management Service Routes
+            - id: notification-service-route
+              uri: lb://notification-management-service
+              predicates:
+                - Path=/api/notifications/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: notification-service-cb
+                    fallbackUri: forward:/fallback/notifications
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: notification-management
+
+          # Development HTTP client settings - shorter timeouts
+          httpclient:
+            connect-timeout: 2000
+            response-timeout: 5s
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://chargeroute:Admin123!@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 10  # More frequent for dev
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Development - faster heartbeat
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+    metadata-map:
+      zone: development
+      version: 1.0.0-dev
+      type: api-gateway
+
+# Health check configuration - disable Redis for development
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+  endpoint:
+    health:
+      show-details: always
+  health:
+    redis:
+      enabled: false
+
+# Development logging
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.chargeroute.gateway: DEBUG
+    reactor.netty.http.client: DEBUG
+    root: WARN
+  file:
+    name: logs/api-gateway.log
+    max-size: 100MB
+    max-history: 30

@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # Discovery locator disabled - using explicit routes defined in GatewayConfig.java
+      # Explicit routes provide better control and work reliably with Config Server
+      discovery:
+        locator:
+          enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000/realms/ev-charging
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka.username}:${eureka.password}@localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${server.port}}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+
+# Observability Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers,env
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: development
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    com.chargeroute: INFO
+    org.springframework: INFO
+    org.springframework.web: DEBUG
+    org.springframework.cloud: INFO
+    org.springframework.cloud.gateway: DEBUG

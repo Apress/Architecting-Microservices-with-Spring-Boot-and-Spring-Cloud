@@ -1,0 +1,289 @@
+{
+  "realm": "ev-charging",
+  "enabled": true,
+  "displayName": "EV Charging Platform",
+  "accessTokenLifespan": 900,
+  "refreshTokenMaxReuse": 0,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "loginTheme": "keycloak",
+  "roles": {
+    "realm": [
+      {
+        "name": "DRIVER",
+        "description": "DRIVER role for EV charging platform"
+      },
+      {
+        "name": "OPERATOR",
+        "description": "OPERATOR role for EV charging platform"
+      },
+      {
+        "name": "ADMIN",
+        "description": "ADMIN role for EV charging platform"
+      }
+    ]
+  },
+  "clientScopes": [
+    {
+      "name": "charging.start",
+      "description": "charging.start scope for EV platform",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "charging.start-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "charging.start",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "charging.read",
+      "description": "charging.read scope for EV platform",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "charging.read-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "charging.read",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "user.profile",
+      "description": "user.profile scope for EV platform",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "user.profile-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "user.profile",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "admin.all",
+      "description": "admin.all scope for EV platform",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "admin.all-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "admin.all",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "service.internal",
+      "description": "service.internal scope for EV platform",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "service.internal-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "service.internal",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "realm-roles",
+      "description": "Include realm roles in JWT tokens",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "ev-mobile-app",
+      "name": "EV Mobile Application",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": ["profile", "email"],
+      "optionalClientScopes": ["charging.start", "charging.read", "user.profile"]
+    },
+    {
+      "clientId": "session-service-client",
+      "name": "Session Management Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "session-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": ["service.internal", "realm-roles"],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "notification-service-client",
+      "name": "Notification Management Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "notification-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": ["service.internal", "realm-roles"],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "admin-client",
+      "name": "Admin Client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "admin-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["+"],
+      "defaultClientScopes": ["admin.all", "realm-roles"],
+      "optionalClientScopes": []
+    }
+  ],
+  "users": [
+    {
+      "username": "driver@evcharging.com",
+      "email": "driver@evcharging.com",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "John",
+      "lastName": "Driver",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["DRIVER"]
+    },
+    {
+      "username": "operator@evcharging.com",
+      "email": "operator@evcharging.com",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Jane",
+      "lastName": "Operator",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["OPERATOR"]
+    },
+    {
+      "username": "admin@evcharging.com",
+      "email": "admin@evcharging.com",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "System",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ADMIN"]
+    },
+    {
+      "username": "service-account-session-service-client",
+      "enabled": true,
+      "serviceAccountClientId": "session-service-client",
+      "realmRoles": ["DRIVER", "OPERATOR"]
+    },
+    {
+      "username": "service-account-notification-service-client",
+      "enabled": true,
+      "serviceAccountClientId": "notification-service-client",
+      "realmRoles": ["DRIVER", "OPERATOR"]
+    },
+    {
+      "username": "service-account-admin-client",
+      "enabled": true,
+      "serviceAccountClientId": "admin-client",
+      "realmRoles": ["ADMIN"]
+    }
+  ]
+}

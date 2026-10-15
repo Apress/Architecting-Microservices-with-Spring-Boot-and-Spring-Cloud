@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: user-management-service
+  config:
+    import: "optional:configserver:http://configuser:configpass@localhost:8888"
+  cloud:
+    config:
+      label: development
+  profiles:
+    active: dev
+
+server:
+  port: 0
+
+---
+# Docker profile configuration
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:http://configuser:configpass@config-server:8888"

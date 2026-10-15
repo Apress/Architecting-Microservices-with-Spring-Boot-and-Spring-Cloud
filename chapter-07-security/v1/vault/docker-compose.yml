@@ -1,0 +1,46 @@
+services:
+  vault:
+    image: vault:1.13.3
+    container_name: vault-dev
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-root-token
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ./policies:/vault/policies:ro
+    command: server -dev
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - vault-network
+
+  # Redis for API Gateway rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: chargeroute-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - vault-network
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  vault-network:
+    driver: bridge

@@ -1,0 +1,28 @@
+# Production environment configuration
+server:
+  port: 8082
+
+# Production-specific business configuration
+chargeroute:
+  user:
+    session-timeout-minutes: 60         # Longer sessions for production
+    max-login-attempts: 8               # More attempts for production
+    account-lockout-minutes: 30         # Longer lockout for security
+    membership:
+      allow-basic-upgrade: true
+      allow-premium-downgrade: false    # Restrict downgrades in prod
+      premium-benefit-multiplier: 3     # Higher benefits for premium
+      basic-monthly-cost: 12.99         # Production pricing
+      premium-monthly-cost: 39.99
+    notification:
+      send-welcome-email: true
+      send-account-updates: true
+      send-security-alerts: true
+      send-membership-changes: true
+
+logging:
+  level:
+    com.chargeroute: INFO
+    org.springframework.cloud.config: WARN
+    org.springframework.web: WARN
+    org.springframework.security: WARN

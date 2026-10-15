@@ -1,0 +1,85 @@
+# Session Management Service Configuration for Production Environment
+server:
+  port: 0  # Dynamic port assignment
+
+# EV Charging Business Configuration - Production Values
+chargeroute:
+  session:
+    # Production - realistic durations
+    max-duration-minutes: 720       # 12 hours max for production
+    idle-timeout-minutes: 15        # Standard idle timeout
+    charge-rate-kwh: 150.0          # Higher charge rate for production
+    auto-start-enabled: true
+    auto-stop-on-full: true
+    auto-stop-on-idle: true
+    pricing:
+      # Production pricing
+      per-kwh-rate: 0.25
+      per-minute-rate: 0.05
+      idle-fee-per-minute: 0.10
+      minimum-charge-amount: 5.00   # Higher minimum for production
+      peak-hour-multiplier: 1.5
+      off-peak-discount: 0.15
+    monitoring:
+      status-update-interval-seconds: 30  # Less frequent in production
+      energy-meter-precision: 0.001
+      temperature-monitoring-enabled: true
+      alert-on-anomaly: true
+      enable-usage-analytics: true
+      data-retention-days: 365
+    integration:
+      # Production - longer timeouts for stability
+      payment-service-timeout-ms: 5000
+      notification-service-timeout-ms: 3000
+      user-service-timeout-ms: 3000
+    security:
+      enable-session-encryption: true
+      require-user-authentication: true
+      enable-audit-logging: true
+    resilience:
+      circuit-breaker-enabled: true
+      retry-attempts: 3
+      retry-delay-ms: 1000
+
+# Service-to-Service Communication
+integration:
+  services:
+    user-management:
+      base-url: http://user-management-service
+      timeout-ms: 3000
+      retry-attempts: 3
+    charge-unit-management:
+      base-url: http://charge-unit-management-service  
+      timeout-ms: 5000
+      retry-attempts: 3
+    notification-management:
+      base-url: http://notification-management-service
+      timeout-ms: 3000
+      retry-attempts: 2
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://chargeroute:Admin123!@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Production - standard heartbeat
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# Data persistence will be added in the persistence chapter
+
+# Production logging - restricted
+logging:
+  level:
+    com.chargeroute.session: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    root: WARN
+  file:
+    name: logs/session-management-service.log

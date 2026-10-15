@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: session-management-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000/realms/ev-charging
+      client:
+        registration:
+          session-service-client:
+            provider: keycloak
+            client-id: ${client-id}
+            client-secret: ${client-secret}
+            authorization-grant-type: client_credentials
+            scope: service.internal
+        provider:
+          keycloak:
+            token-uri: http://localhost:9000/realms/ev-charging/protocol/openid-connect/token
+  datasource:
+    url: jdbc:postgresql://localhost:5433/sessiondb
+    username: sessionservice
+    # password retrieved from Vault at secret/session-management-service
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka.username}:${eureka.password}@localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}

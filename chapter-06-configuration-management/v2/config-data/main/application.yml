@@ -1,0 +1,34 @@
+# Global application defaults for production environment
+# These settings apply to all services unless overridden
+# Note: spring.profiles.active cannot be set here - it's determined by the service startup
+
+logging:
+  level:
+    com.chargeroute: DEBUG
+    org.springframework.cloud: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Production specific settings - restricted endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+    shutdown:
+      enabled: false
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Production tracing - disabled for performance
+spring.sleuth:
+  zipkin:
+    enabled: false
+  sampler:
+    probability: 0.1  # Sample only 10% of requests

@@ -1,0 +1,31 @@
+# Global application defaults for development environment
+# These settings apply to all services unless overridden
+# Note: spring.profiles.active cannot be set here - it's determined by the service startup
+
+# Development environment settings
+logging:
+  level:
+    com.chargeroute: DEBUG
+    org.springframework.cloud: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Development specific settings
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: true
+
+# Development tracing
+spring.sleuth:
+  zipkin:
+    enabled: false
+  sampler:
+    probability: 1.0

@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-service-config
+  namespace: chargeroute
+  labels:
+    app: user-service
+data:
+  application.yml: |
+    server:
+      port: 8080
+
+    spring:
+      application:
+        name: user-service
+
+      r2dbc:
+        url: ${DATABASE_URL}
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+
+      flyway:
+        enabled: true
+        baseline-on-migrate: true
+        url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+        user: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+
+      cloud:
+        stream:
+          bindings:
+            userRegistered-out-0:
+              destination: user-events
+              content-type: application/json
+          rabbit:
+            bindings:
+              userRegistered-out-0:
+                producer:
+                  routing-key-expression: "'user.registered'"
+          function:
+            definition: userRegistered
+
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,prometheus
+      endpoint:
+        health:
+          probes:
+            enabled: true
+          show-details: always
+      metrics:
+        tags:
+          application: ${spring.application.name}
+        export:
+          prometheus:
+            enabled: true
+      tracing:
+        sampling:
+          probability: 1.0
+      zipkin:
+        tracing:
+          endpoint: ${ZIPKIN_URL}/api/v2/spans
+
+    logging:
+      level:
+        com.chargeroute: INFO
+        org.springframework.r2dbc: DEBUG
+      pattern:
+        console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

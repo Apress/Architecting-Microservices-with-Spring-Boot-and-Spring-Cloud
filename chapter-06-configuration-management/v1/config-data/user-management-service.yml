@@ -1,0 +1,57 @@
+# Default configuration for User Management Service
+server:
+  port: 0
+
+spring:
+  application:
+    name: user-management-service
+
+eureka:
+  client:
+    service-url:
+      default-zone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      zone: primary
+      version: 1.0.0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+  endpoint:
+    health:
+      show-details: always
+    refresh:
+      enabled: true
+
+# Business configuration
+chargeroute:
+  user:
+    session-timeout-minutes: 30
+    max-login-attempts: 5
+    account-lockout-minutes: 15
+    membership:
+      allow-basic-upgrade: true
+      allow-premium-downgrade: true
+      premium-benefit-multiplier: 2
+      basic-monthly-cost: 9.99
+      premium-monthly-cost: 29.99
+    notification:
+      send-welcome-email: true
+      send-account-updates: true
+      send-security-alerts: true
+      send-membership-changes: true
+
+logging:
+  level:
+    com.chargeroute: INFO
+    org.springframework.cloud.config: DEBUG

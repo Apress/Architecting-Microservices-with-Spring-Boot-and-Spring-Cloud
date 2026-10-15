@@ -1,0 +1,37 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: file:../config-data
+  profiles:
+    active: native
+  security:
+    user:
+      name: configuser
+      password: configpass
+
+# Config Server should NOT register with Eureka to avoid circular dependencies
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.chargeroute: INFO
+    org.springframework.cloud.config: DEBUG

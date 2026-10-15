@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: authorization-server
+  cloud:
+    config:
+      enabled: false
+
+server:
+  port: 0
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO

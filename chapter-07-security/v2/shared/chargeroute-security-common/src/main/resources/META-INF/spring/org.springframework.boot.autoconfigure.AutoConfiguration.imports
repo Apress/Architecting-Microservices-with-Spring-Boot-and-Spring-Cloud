@@ -1,0 +1,2 @@
+com.chargeroute.security.KeycloakJwtAuthenticationConverter
+com.chargeroute.security.KeycloakReactiveJwtAuthenticationConverter

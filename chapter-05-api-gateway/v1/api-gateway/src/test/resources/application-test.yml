@@ -1,0 +1,24 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false # Disable service discovery in tests
+          routes: [] # No routes in test profile
+
+eureka:
+  client:
+    enabled: false # Disable Eureka in tests
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    org.springframework.cloud.gateway: WARN
+    com.chargeroute.gateway: INFO

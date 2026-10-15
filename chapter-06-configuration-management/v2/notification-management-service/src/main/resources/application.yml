@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: notification-management-service
+  config:
+    import: "optional:configserver:http://configuser:configpass@localhost:8888"
+
+---
+# Docker profile configuration  
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:http://configuser:configpass@config-server:8888"

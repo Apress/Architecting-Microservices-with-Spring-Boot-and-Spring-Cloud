@@ -1,0 +1,52 @@
+# Test Configuration for Charge Unit Management Service (Reactive)
+# Configured for H2 in-memory database with R2DBC
+
+server:
+  port: 0  # Random port for testing
+
+spring:
+  application:
+    name: charge-unit-management-service
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.springframework.cloud.stream.binder.rabbit.config.RabbitServiceAutoConfiguration
+  # R2DBC H2 configuration for tests
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+  # JDBC H2 for Flyway migrations
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  flyway:
+    enabled: true
+    clean-disabled: false
+    baseline-on-migrate: true
+  cloud:
+    stream:
+      bindings:
+        chargeUnitCreated-out-0:
+          destination: test-chargeunit-events
+        chargeUnitUpdated-out-0:
+          destination: test-chargeunit-events
+    function:
+      definition: ''
+
+logging:
+  level:
+    com.chargeroute.chargeunit: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always

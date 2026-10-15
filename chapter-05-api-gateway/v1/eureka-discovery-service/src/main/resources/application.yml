@@ -1,0 +1,59 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eureka-discovery-service
+  security:
+    user:
+      name: chargeroute
+      password: Admin123!
+
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    enable-self-preservation: true
+    eviction-interval-timer-in-ms: 60000
+    renewal-percent-threshold: 0.85
+    renewal-threshold-update-interval-ms: 900000
+    expected-client-renewal-interval-seconds: 30
+    response-cache-update-interval-ms: 30000
+    response-cache-auto-expiration-in-seconds: 180
+    peer-eureka-nodes-update-interval-ms: 600000
+    wait-time-in-ms-when-sync-empty: 0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: Service Discovery Server for ChargeRoute Platform
+    version: '@project.version@'
+
+logging:
+  level:
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
+    org.springframework.cloud: INFO
+    com.chargeroute: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

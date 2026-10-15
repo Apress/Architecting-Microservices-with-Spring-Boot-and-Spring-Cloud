@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: keycloak-postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chargeroute-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: keycloak-server
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 9000
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./ev-charging-realm.json:/opt/keycloak/data/import/ev-charging-realm.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: start-dev --http-port=9000 --import-realm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - chargeroute-network
+
+  # Redis for API Gateway rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: chargeroute-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - chargeroute-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  chargeroute-network:
+    driver: bridge

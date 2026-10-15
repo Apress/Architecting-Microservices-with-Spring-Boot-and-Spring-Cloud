@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.chargeroute</groupId>
+    <artifactId>chargeroute-kubernetes</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>ChargeRoute Kubernetes Deployment</name>
+    <description>
+        Chapter 12: Local Kubernetes Deployment
+        ChargeRoute microservices platform deployed to Kubernetes using Kind.
+        Demonstrates Kubernetes-native patterns replacing Spring Cloud components.
+    </description>
+
+    <modules>
+        <module>user-management-service</module>
+        <module>charge-unit-management-service</module>
+        <module>session-management-service</module>
+        <module>notification-management-service</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+</project>

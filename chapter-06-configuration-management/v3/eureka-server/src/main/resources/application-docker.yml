@@ -1,0 +1,43 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eureka-server
+  security:
+    user:
+      name: ${EUREKA_USERNAME:chargeroute}
+      password: ${EUREKA_PASSWORD:Admin123!}
+
+eureka:
+  instance:
+    hostname: eureka-server
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${EUREKA_USERNAME:chargeroute}:${EUREKA_PASSWORD:Admin123!}@eureka-server:8761/eureka/
+  server:
+    enable-self-preservation: true
+    eviction-interval-timer-in-ms: 60000
+    renewal-percent-threshold: 0.85
+    wait-time-in-ms-when-sync-empty: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
+    org.springframework.cloud: INFO
+    com.chargeroute: INFO

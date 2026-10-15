@@ -1,0 +1,27 @@
+# Development environment configuration
+server:
+  port: 0
+
+# Development-specific business configuration
+chargeroute:
+  user:
+    session-timeout-minutes: 15      # Shorter sessions for testing
+    max-login-attempts: 3            # Lower threshold for testing
+    account-lockout-minutes: 5       # Shorter lockout for testing
+    membership:
+      allow-basic-upgrade: true
+      allow-premium-downgrade: true
+      premium-benefit-multiplier: 1   # Reduced multiplier for dev
+      basic-monthly-cost: 5.99        # Discounted rates for dev
+      premium-monthly-cost: 19.99
+    notification:
+      send-welcome-email: true
+      send-account-updates: true
+      send-security-alerts: true
+      send-membership-changes: true
+
+logging:
+  level:
+    com.chargeroute: DEBUG
+    org.springframework.cloud.config: DEBUG
+    org.springframework.web: DEBUG

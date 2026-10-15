@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: notification-management-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000/realms/ev-charging
+      client:
+        registration:
+          notification-service-client:
+            provider: keycloak
+            client-id: ${client-id}
+            client-secret: ${client-secret}
+            authorization-grant-type: client_credentials
+            scope: service.internal
+        provider:
+          keycloak:
+            token-uri: http://localhost:9000/realms/ev-charging/protocol/openid-connect/token
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka.username}:${eureka.password}@localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}

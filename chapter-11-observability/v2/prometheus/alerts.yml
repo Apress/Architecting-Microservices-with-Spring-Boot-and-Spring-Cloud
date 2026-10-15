@@ -1,0 +1,295 @@
+groups:
+  - name: chargeroute_service_alerts
+    interval: 30s
+    rules:
+      # Service Availability Alerts
+      - alert: ServiceDown
+        expr: up{job=~".*-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "ChargeRoute Service Down: {{ $labels.job }}"
+          description: "Service {{ $labels.job }} on instance {{ $labels.instance }} has been down for more than 1 minute."
+
+      - alert: ServiceInstanceDown
+        expr: up{job=~"eureka-server|config-server|api-gateway"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          category: infrastructure
+        annotations:
+          summary: "Critical Infrastructure Service Down: {{ $labels.job }}"
+          description: "Infrastructure service {{ $labels.job }} is down. This affects the entire platform."
+
+      # High Error Rate Alerts
+      - alert: HighHTTPErrorRate
+        expr: |
+          (
+            sum by (service) (rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+            /
+            sum by (service) (rate(http_server_requests_seconds_count[5m]))
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High HTTP 5xx Error Rate on {{ $labels.service }}"
+          description: "Service {{ $labels.service }} has {{ $value | humanizePercentage }} 5xx error rate over the last 5 minutes."
+
+      - alert: CriticalHTTPErrorRate
+        expr: |
+          (
+            sum by (service) (rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+            /
+            sum by (service) (rate(http_server_requests_seconds_count[5m]))
+          ) > 0.10
+        for: 1m
+        labels:
+          severity: critical
+          category: performance
+        annotations:
+          summary: "Critical HTTP 5xx Error Rate on {{ $labels.service }}"
+          description: "Service {{ $labels.service }} has {{ $value | humanizePercentage }} 5xx error rate. Immediate attention required."
+
+  - name: chargeroute_business_alerts
+    interval: 1m
+    rules:
+      # Session Management Alerts
+      - alert: HighSessionFailureRate
+        expr: rate(chargeroute_sessions_failed_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "High Charging Session Failure Rate"
+          description: "Session failure rate is {{ $value | humanize }} failures per second over the last 5 minutes."
+
+      - alert: NoActiveChargingSessions
+        expr: chargeroute_sessions_active_total == 0
+        for: 30m
+        labels:
+          severity: info
+          category: business
+        annotations:
+          summary: "No Active Charging Sessions"
+          description: "There have been no active charging sessions for 30 minutes. This may indicate a platform issue or low usage period."
+
+      - alert: TooManyActiveSessions
+        expr: chargeroute_sessions_active_total > 100
+        for: 5m
+        labels:
+          severity: warning
+          category: capacity
+        annotations:
+          summary: "High Number of Active Charging Sessions"
+          description: "There are {{ $value }} active charging sessions. Consider scaling up resources."
+
+      # Charge Unit Alerts
+      - alert: LowChargeUnitAvailability
+        expr: chargeroute_chargeunits_available_total < 5
+        for: 10m
+        labels:
+          severity: warning
+          category: capacity
+        annotations:
+          summary: "Low Charge Unit Availability"
+          description: "Only {{ $value }} charge units are available. Consider monitoring demand patterns."
+
+      - alert: NoChargeUnitsAvailable
+        expr: chargeroute_chargeunits_available_total == 0
+        for: 5m
+        labels:
+          severity: critical
+          category: capacity
+        annotations:
+          summary: "No Charge Units Available"
+          description: "All charge units are currently in use. New charging session requests will fail."
+
+      - alert: HighChargeUnitUtilization
+        expr: chargeroute_chargeunits_utilization_total > 90
+        for: 15m
+        labels:
+          severity: warning
+          category: capacity
+        annotations:
+          summary: "High Charge Unit Utilization"
+          description: "Charge unit utilization is at {{ $value }}%. Consider capacity expansion."
+
+      # Notification Alerts
+      - alert: HighNotificationFailureRate
+        expr: |
+          (
+            sum(rate(chargeroute_notifications_failed_total[5m]))
+            /
+            (sum(rate(chargeroute_notifications_sent_total[5m])) + sum(rate(chargeroute_notifications_failed_total[5m])))
+          ) > 0.10
+        for: 5m
+        labels:
+          severity: warning
+          category: integration
+        annotations:
+          summary: "High Notification Failure Rate"
+          description: "Notification failure rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      - alert: NotificationSystemDown
+        expr: |
+          (
+            rate(chargeroute_notifications_sent_total[5m]) == 0
+            and
+            rate(chargeroute_notifications_failed_total[5m]) == 0
+          )
+        for: 10m
+        labels:
+          severity: critical
+          category: integration
+        annotations:
+          summary: "Notification System Not Sending"
+          description: "No notifications have been sent or failed in the last 10 minutes. Check notification service and message broker."
+
+  - name: chargeroute_performance_alerts
+    interval: 1m
+    rules:
+      # Response Time Alerts
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum by (service, le) (rate(http_server_requests_seconds_bucket[5m]))
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High Response Time on {{ $labels.service }}"
+          description: "The 95th percentile response time for {{ $labels.service }} is {{ $value | humanize }}s, exceeding the 2-second threshold."
+
+      - alert: CriticalResponseTime
+        expr: |
+          histogram_quantile(0.99,
+            sum by (service, le) (rate(http_server_requests_seconds_bucket[5m]))
+          ) > 5.0
+        for: 2m
+        labels:
+          severity: critical
+          category: performance
+        annotations:
+          summary: "Critical Response Time on {{ $labels.service }}"
+          description: "The 99th percentile response time for {{ $labels.service }} is {{ $value | humanize }}s. Investigate immediately."
+
+  - name: chargeroute_infrastructure_alerts
+    interval: 1m
+    rules:
+      # PostgreSQL Alerts
+      - alert: PostgreSQLDown
+        expr: up{job="postgres-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: infrastructure
+        annotations:
+          summary: "PostgreSQL Database Down"
+          description: "PostgreSQL database is unreachable. All services will be affected."
+
+      - alert: HighDatabaseConnections
+        expr: sum(pg_stat_database_numbackends) > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "High PostgreSQL Connection Count"
+          description: "PostgreSQL has {{ $value }} active connections. Max is typically 100."
+
+      - alert: LowDatabaseCacheHitRatio
+        expr: |
+          (
+            sum(pg_stat_database_blks_hit)
+            /
+            (sum(pg_stat_database_blks_hit) + sum(pg_stat_database_blks_read))
+          ) < 0.90
+        for: 10m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "Low PostgreSQL Cache Hit Ratio"
+          description: "Database cache hit ratio is {{ $value | humanizePercentage }}. Consider increasing shared_buffers."
+
+      # RabbitMQ Alerts
+      - alert: RabbitMQDown
+        expr: up{job="rabbitmq"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: infrastructure
+        annotations:
+          summary: "RabbitMQ Message Broker Down"
+          description: "RabbitMQ is unreachable. Event-driven communication is broken."
+
+      - alert: HighRabbitMQQueueDepth
+        expr: rabbitmq_queue_messages > 1000
+        for: 10m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "High RabbitMQ Queue Depth on {{ $labels.queue }}"
+          description: "Queue {{ $labels.queue }} has {{ $value }} messages. Consumers may be slow or unavailable."
+
+      - alert: RabbitMQNoConsumers
+        expr: rabbitmq_queue_consumers == 0 and rabbitmq_queue_messages > 0
+        for: 5m
+        labels:
+          severity: critical
+          category: infrastructure
+        annotations:
+          summary: "RabbitMQ Queue Has No Consumers"
+          description: "Queue {{ $labels.queue }} has messages but no consumers. Events are not being processed."
+
+      # JVM Alerts
+      - alert: HighJVMMemoryUsage
+        expr: |
+          (
+            jvm_memory_used_bytes{area="heap"}
+            /
+            jvm_memory_max_bytes{area="heap"}
+          ) > 0.90
+        for: 5m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High JVM Heap Memory Usage on {{ $labels.application }}"
+          description: "JVM heap memory usage is {{ $value | humanizePercentage }} on {{ $labels.application }}. Memory leak or insufficient heap size."
+
+      - alert: HighGCRate
+        expr: rate(jvm_gc_pause_seconds_count[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High Garbage Collection Rate on {{ $labels.application }}"
+          description: "GC rate is {{ $value | humanize }} collections per second on {{ $labels.application }}. This may impact performance."
+
+      # Disk Space Alert
+      - alert: LowDiskSpace
+        expr: |
+          (
+            1 - (
+              node_filesystem_avail_bytes{mountpoint="/"}
+              /
+              node_filesystem_size_bytes{mountpoint="/"}
+            )
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "Low Disk Space on {{ $labels.instance }}"
+          description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}. Clean up logs or expand storage."

@@ -1,0 +1,49 @@
+# Global application defaults for production environment
+# These settings apply to all services unless overridden
+# Note: spring.profiles.active cannot be set here - it's determined by the service startup
+
+# Default Eureka configuration for all services
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${vault.infrastructure.eureka.admin.username}:${vault.infrastructure.eureka.admin.password}@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+# Production environment settings
+logging:
+  level:
+    com.chargeroute: INFO
+    org.springframework.cloud: WARN
+    org.springframework.web: WARN
+    root: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/chargeroute.log
+    max-size: 100MB
+    max-history: 30
+
+# Production specific settings - restricted endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: false
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Production tracing - disabled for performance
+spring.sleuth:
+  zipkin:
+    enabled: false
+  sampler:
+    probability: 0.1  # Sample only 10% of requests

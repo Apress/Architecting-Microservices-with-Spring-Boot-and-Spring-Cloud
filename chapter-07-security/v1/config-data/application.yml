@@ -1,0 +1,24 @@
+# Shared configuration for all services
+spring:
+  cloud:
+    config:
+      enabled: true
+      fail-fast: true
+      username: configuser
+      password: configpass
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    com.chargeroute: DEBUG

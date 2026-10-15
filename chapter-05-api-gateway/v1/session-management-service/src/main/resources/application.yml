@@ -1,0 +1,38 @@
+
+server:
+  port: 0
+
+spring:
+  application:
+    name: session-management-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka.username:chargeroute}:${eureka.password:Admin123!}@${eureka.hostname:localhost}:${eureka.port:8761}/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      zone: primary
+      version: 1.0.0
+
+logging:
+  level:
+    com.chargeroute.session: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always

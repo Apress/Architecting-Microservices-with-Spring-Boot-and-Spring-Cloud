@@ -1,0 +1,62 @@
+# User Management Service Configuration for Production Environment
+server:
+  port: 0  # Dynamic port assignment
+
+# EV Charging Business Configuration - Production Values
+chargeroute:
+  user:
+    # Production - longer timeouts for stability
+    session-timeout-minutes: 60
+    max-login-attempts: 8
+    account-lockout-minutes: 30
+    membership:
+      allow-basic-upgrade: true
+      allow-premium-downgrade: true
+      premium-benefit-multiplier: 2
+      # Production pricing
+      basic-monthly-cost: 12.99
+      premium-monthly-cost: 39.99
+    notification:
+      send-welcome-email: true
+      send-account-updates: true
+      send-security-alerts: true
+      send-membership-changes: true
+    validation:
+      email-verification-required: true   # Required in production
+      phone-verification-required: true   # Required in production
+    security:
+      password-min-length: 12
+      password-require-special-chars: true
+      password-require-numbers: true
+      password-require-uppercase: true
+      session-concurrent-limit: 3
+      enable-two-factor-auth: true
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://chargeroute:Admin123!@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Production - standard heartbeat
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# Data persistence will be added in the persistence chapter
+
+# Production logging - restricted
+logging:
+  level:
+    com.chargeroute.user: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    root: WARN
+  file:
+    name: logs/user-management-service.log
+    max-size: 100MB
+    max-history: 30

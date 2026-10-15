@@ -1,0 +1,158 @@
+version: '3.8'
+
+services:
+  config-server:
+    build: ./config-server
+    ports:
+      - "8888:8888"
+    # Config Server starts first - no dependencies
+    volumes:
+      - ./config-data:/config-data:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-u", "configuser:configpass", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - chargeroute-network
+
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - chargeroute-network
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - chargeroute-network
+
+  user-management-service:
+    build: ./user-management-service
+    # No fixed port - using dynamic port allocation
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/users/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - chargeroute-network
+
+  charge-unit-management-service:
+    build: ./charge-unit-management-service
+    # No fixed port - using dynamic port allocation
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/charge-units/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - chargeroute-network
+
+  session-management-service:
+    build: ./session-management-service
+    # No fixed port - using dynamic port allocation
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-management-service:
+        condition: service_healthy
+      charge-unit-management-service:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/sessions/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - chargeroute-network
+
+  notification-management-service:
+    build: ./notification-management-service
+    # No fixed port - using dynamic port allocation
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/notifications/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - chargeroute-network
+
+  # Redis for API Gateway rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: chargeroute-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - chargeroute-network
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  chargeroute-network:
+    driver: bridge

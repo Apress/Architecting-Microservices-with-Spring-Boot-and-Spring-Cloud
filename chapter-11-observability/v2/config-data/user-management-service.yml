@@ -1,0 +1,104 @@
+spring:
+  application:
+    name: user-management-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000/realms/ev-charging
+  # R2DBC Configuration - Reactive database connection
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5433/userdb
+    username: userservice
+    password: ${spring.datasource.password}
+    pool:
+      initial-size: 10
+      max-size: 50
+      max-idle-time: 30m
+      max-acquire-time: 3s
+  # Flyway uses its own JDBC connection (R2DBC apps don't auto-configure a DataSource)
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://localhost:5433/userdb
+    user: userservice
+    password: ${spring.datasource.password}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  # Spring Cloud Stream Configuration for Event-Driven Architecture
+  cloud:
+    stream:
+      bindings:
+        # Output binding - publish UserRegistered events
+        userRegistered-out-0:
+          destination: user-events
+          content-type: application/json
+        # Output binding - publish UserUpdated events
+        userUpdated-out-0:
+          destination: user-events
+          content-type: application/json
+      rabbit:
+        bindings:
+          userRegistered-out-0:
+            producer:
+              declare-exchange: true
+              exchange-type: topic
+          userUpdated-out-0:
+            producer:
+              declare-exchange: true
+              exchange-type: topic
+  # RabbitMQ Connection
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka.username}:${eureka.password}@localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+# Observability Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers,env
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true  # For Kubernetes readiness/liveness
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: development
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0  # 100% sampling for development
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    com.chargeroute: INFO
+    org.springframework: INFO
+    org.springframework.web: DEBUG
+    org.springframework.cloud: INFO
+    org.springframework.data: DEBUG
+    io.r2dbc: DEBUG

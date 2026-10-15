@@ -1,0 +1,53 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: vault,native
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    config:
+      server:
+        vault:
+          host: localhost
+          port: 8200
+          scheme: http
+          authentication: TOKEN
+          token: ${VAULT_TOKEN:root-token}
+          kv-version: 2
+          backend: secret
+          default-key: application
+        native:
+          search-locations: file:../config-data
+          order: 2
+    vault:
+      token: ${VAULT_TOKEN:root-token}
+  security:
+    user:
+      name: configuser
+      password: configpass
+
+# Config Server should NOT register with Eureka to avoid circular dependencies
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh,env,configprops,bus-refresh,prometheus
+  endpoint:
+    health:
+      show-details: always
+    refresh:
+      access: unrestricted
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+    org.eclipse.jgit: INFO

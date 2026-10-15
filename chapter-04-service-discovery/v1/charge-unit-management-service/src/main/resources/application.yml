@@ -1,0 +1,22 @@
+
+server:
+  port: 8081
+
+spring:
+  application:
+    name: Charge Unit Management Service
+
+logging:
+  level:
+    com.chargeroute.chargeunit: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always

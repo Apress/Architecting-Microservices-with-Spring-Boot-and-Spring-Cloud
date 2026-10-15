@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: session-management-service
+  cloud:
+    config:
+      enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9999
+      client:
+        registration:
+          session-service-client:
+            provider: mock-auth-server
+            client-id: session-service-client
+            client-secret: session-secret
+            authorization-grant-type: client_credentials
+            scope: service.internal
+        provider:
+          mock-auth-server:
+            token-uri: http://localhost:9999/oauth2/token
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+server:
+  port: 0

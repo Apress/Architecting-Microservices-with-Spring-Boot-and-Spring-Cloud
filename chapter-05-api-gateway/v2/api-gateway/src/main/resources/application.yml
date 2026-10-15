@@ -1,0 +1,179 @@
+server:
+  port: 8080
+  # Increase header buffer size for large actuator responses
+  max-http-request-header-size: 64KB
+  netty:
+    max-initial-line-length: 65536
+    max-header-size: 65536
+
+spring:
+  application:
+    name: api-gateway
+  data:
+    redis:
+      host: ${redis.hostname:localhost}
+      port: ${redis.port:6379}
+      timeout: 10s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # Global CORS configuration for web and mobile clients
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:3000"  # e.g. for a React web app
+                  - "http://localhost:3001"  # e.g. for a Admin dashboard
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: "*"
+                allowCredentials: true
+                maxAge: 3600
+
+          # Default filters applied to all routes
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+            - AddRequestHeader=X-Gateway-Name, ChargeRoute-API-Gateway
+
+          # This creates routes like /user-management-service/** -> USER-MANAGEMENT-SERVICE
+          # Enable automatic route discovery from Eureka
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+
+          # Custom route definitions
+          routes:
+            # User Management Service Routes
+            - id: user-service-route
+              uri: lb://USER-MANAGEMENT-SERVICE
+              predicates:
+                - Path=/api/users/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: user-service-cb
+                    fallbackUri: forward:/fallback/users
+                - name: RequestRateLimiter
+                  args:
+                    redis-rate-limiter.replenishRate: 10
+                    redis-rate-limiter.burstCapacity: 20
+                    key-resolver: "#{@userKeyResolver}"
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: user-management
+            
+            # Charge Unit Management Service Routes  
+            - id: charge-unit-service-route
+              uri: lb://CHARGE-UNIT-MANAGEMENT-SERVICE
+              predicates:
+                - Path=/api/charge-units/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: charge-unit-service-cb
+                    fallbackUri: forward:/fallback/charge-units
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: charge-unit-management
+            
+            # Session Management Service Routes
+            - id: session-service-route
+              uri: lb://SESSION-MANAGEMENT-SERVICE
+              predicates:
+                - Path=/api/sessions/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: session-service-cb
+                    fallbackUri: forward:/fallback/sessions
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: session-management
+            
+            # Notification Management Service Routes
+            - id: notification-service-route
+              uri: lb://NOTIFICATION-MANAGEMENT-SERVICE
+              predicates:
+                - Path=/api/notifications/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: notification-service-cb
+                    fallbackUri: forward:/fallback/notifications
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: notification-management
+            
+            # Gateway health and info endpoints
+            - id: gateway-actuator-route
+              uri: http://localhost:8080
+              predicates:
+                - Path=/actuator/**
+              filters:
+                - name: AddRequestHeader
+                  args:
+                    name: X-Internal-Request
+                    value: gateway-actuator
+          
+          # HTTP Client timeout configuration
+          httpclient:
+            connect-timeout: 5000
+            response-timeout: 10s
+            # Increase header buffer size for large responses
+            max-header-size: 65536
+            max-initial-line-length: 65536
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka.username:chargeroute}:${eureka.password:Admin123!}@${eureka.hostname:localhost}:${eureka.port:8761}/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      zone: primary
+      version: 1.0.0
+      type: api-gateway
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# Logging Configuration
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.chargeroute.gateway: DEBUG
+    reactor.netty.http.client: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n"

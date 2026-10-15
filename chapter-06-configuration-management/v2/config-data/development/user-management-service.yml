@@ -1,0 +1,50 @@
+# User Management Service Configuration for Development Environment
+server:
+  port: 0  # Dynamic port assignment
+
+# EV Charging Business Configuration - Development Values
+chargeroute:
+  user:
+    # Development - shorter timeouts for testing
+    session-timeout-minutes: 15
+    max-login-attempts: 3
+    account-lockout-minutes: 5
+    membership:
+      allow-basic-upgrade: true
+      allow-premium-downgrade: true
+      premium-benefit-multiplier: 2
+      # Development pricing - lower costs
+      basic-monthly-cost: 5.99
+      premium-monthly-cost: 19.99
+    notification:
+      send-welcome-email: true
+      send-account-updates: true
+      send-security-alerts: true
+      send-membership-changes: true
+    validation:
+      email-verification-required: false  # Skip for dev
+      phone-verification-required: false  # Skip for dev
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://chargeroute:Admin123!@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Development - faster heartbeat
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+
+# Development logging
+logging:
+  level:
+    com.chargeroute.user: DEBUG
+    org.springframework.web: DEBUG
+  file:
+    name: logs/user-management-service.log
+    max-size: 100MB
+    max-history: 30

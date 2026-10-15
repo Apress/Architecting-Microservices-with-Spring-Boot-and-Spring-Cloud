@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: eureka-server
+  config:
+    import: "optional:configserver:http://configuser:configpass@localhost:8888"
+  security:
+    user:
+      name: chargeroute
+      password: Admin123!
+
+server:
+  port: 8761
+
+---
+# Docker profile configuration
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:http://configuser:configpass@config-server:8888"

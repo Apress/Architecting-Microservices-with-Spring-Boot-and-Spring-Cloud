@@ -1,0 +1,47 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/brianeno/sc-book-config-repo.git
+          default-label: main
+          clone-on-start: true
+          force-pull: true
+          timeout: 10
+          refresh-rate: 30
+        health:
+          repositories:
+            config-repo:
+              label: main
+              name: sc-book-config-repo
+  security:
+    user:
+      name: configuser
+      password: configpass
+
+# Config Server should NOT register with Eureka to avoid circular dependencies
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh,env,configprops,bus-refresh
+  endpoint:
+    health:
+      show-details: always
+    refresh:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+    org.eclipse.jgit: INFO

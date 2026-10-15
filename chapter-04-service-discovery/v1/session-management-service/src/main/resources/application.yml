@@ -1,0 +1,22 @@
+
+server:
+  port: 8083
+
+spring:
+  application:
+    name: session-management-service
+
+logging:
+  level:
+    com.chargeroute.session: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always

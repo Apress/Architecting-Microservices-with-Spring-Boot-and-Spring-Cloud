@@ -1,0 +1,18 @@
+# Notification Management Service bootstrap configuration for v3
+spring:
+  application:
+    name: notification-management-service
+  config:
+    import:
+      - "configserver:http://configuser:configpass@localhost:8888"
+  cloud:
+    config:
+      fail-fast: true
+      retry:
+        initial-interval: 1000
+        max-interval: 5000
+        max-attempts: 5
+
+# Note: In production, retrieve Config Server credentials from Vault.
+# For simplicity in this chapter, we're using hardcoded credentials.
+# The Config Server itself will retrieve all configuration from Vault.

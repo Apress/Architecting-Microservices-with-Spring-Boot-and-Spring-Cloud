@@ -1,0 +1,18 @@
+# Config Server bootstrap configuration for Vault integration
+spring:
+  application:
+    name: config-server
+  cloud:
+    vault:
+      host: localhost
+      port: 8200
+      scheme: http
+      authentication: TOKEN
+      token: ${VAULT_TOKEN:dev-root-token}
+      kv:
+        enabled: true
+        backend: secret
+        default-context: application
+      config:
+        order: 1  # Vault has priority over other backends
+      fail-fast: false  # Allow startup even if Vault is not available initially

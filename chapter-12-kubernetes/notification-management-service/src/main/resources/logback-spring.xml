@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProperty scope="context" name="appName" source="spring.application.name"/>
+
+    <!-- Console Appender with JSON Encoding -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeContext>true</includeContext>
+            <includeMdc>true</includeMdc>
+            <includeTags>true</includeTags>
+            <includeCallerData>false</includeCallerData>
+            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampPattern>
+            <customFields>{"application":"${appName:-unknown}"}</customFields>
+
+            <!-- Include trace and span IDs automatically from Micrometer Tracing -->
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <thread>thread</thread>
+                <level>level</level>
+                <logger>logger</logger>
+                <message>message</message>
+                <stackTrace>stack_trace</stackTrace>
+            </fieldNames>
+        </encoder>
+    </appender>
+
+    <!-- Root Logger - console only for Kubernetes (logs collected via stdout) -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE_JSON"/>
+    </root>
+
+    <!-- Application-specific logging -->
+    <logger name="com.chargeroute" level="INFO"/>
+
+    <!-- Spring Framework logging -->
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.web" level="DEBUG"/>
+    <logger name="org.springframework.cloud" level="INFO"/>
+
+    <!-- Database logging -->
+    <logger name="org.springframework.data" level="DEBUG"/>
+    <logger name="io.r2dbc" level="DEBUG"/>
+
+    <!-- RabbitMQ logging -->
+    <logger name="org.springframework.amqp" level="INFO"/>
+    <logger name="org.springframework.cloud.stream" level="INFO"/>
+</configuration>

@@ -1,0 +1,11 @@
+
+
+
+
+
+java -jar debussey-cli/target/debussey-cli-0.1.0-SNAPSHOT.jar schema generate --file SessionSummary.java --output sample-sessionsummary-evebt-schema.json
+
+schema generate --file SessionSummary.java --output sample-sessionsummary-event-schema.json
+
+schema generate --file ChargeSession.java --output sample-chargesessionsummary-event-schema.json
+

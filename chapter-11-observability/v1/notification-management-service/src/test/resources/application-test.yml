@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: notification-management-service
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+  cloud:
+    config:
+      enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9999
+      client:
+        registration:
+          notification-service-client:
+            provider: mock-auth-server
+            client-id: notification-service-client
+            client-secret: notification-secret
+            authorization-grant-type: client_credentials
+            scope: service.internal
+        provider:
+          mock-auth-server:
+            token-uri: http://localhost:9999/oauth2/token
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+server:
+  port: 0

@@ -1,0 +1,52 @@
+# Test Configuration for Notification Management Service
+# Configured for H2 in-memory database with JPA
+
+server:
+  port: 0  # Random port for testing
+
+spring:
+  application:
+    name: notification-management-service
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.springframework.cloud.stream.binder.rabbit.config.RabbitServiceAutoConfiguration
+  # H2 configuration for tests (JPA-based service)
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false  # Using Hibernate DDL for tests
+  cloud:
+    stream:
+      bindings:
+        notificationSent-out-0:
+          destination: test-notification-events
+        userEvents-in-0:
+          destination: test-user-events
+    function:
+      definition: processUserEvent
+
+logging:
+  level:
+    com.chargeroute.notification: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always

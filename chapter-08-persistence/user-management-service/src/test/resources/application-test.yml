@@ -1,0 +1,55 @@
+# Test Configuration for User Management Service
+# Disables Eureka for unit testing to avoid connection failures
+
+server:
+  port: 0  # Random port for testing
+
+spring:
+  application:
+    name: user-management-service
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+  cloud:
+    config:
+      enabled: false  # Disable Config Server for unit tests
+    discovery:
+      enabled: false  # Disable discovery for unit tests
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9999  # Mock issuer for tests
+
+eureka:
+  client:
+    enabled: false  # Disable Eureka client for unit tests
+    register-with-eureka: false
+    fetch-registry: false
+
+logging:
+  level:
+    com.chargeroute.user: DEBUG
+    com.netflix.discovery: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always

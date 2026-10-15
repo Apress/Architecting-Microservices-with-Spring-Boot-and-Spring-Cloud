@@ -1,0 +1,66 @@
+# Charge Unit Management Service Configuration for Production Environment
+server:
+  port: 0  # Dynamic port assignment
+
+# EV Charging Business Configuration - Production Values
+chargeroute:
+  chargeunit:
+    # Production - longer intervals for stability
+    status-check-interval-seconds: 30
+    maintenance-check-interval-hours: 24
+    max-concurrent-sessions: 8  # Higher capacity for production
+    default-power-rating-kw: 150.0
+    supported-connector-types:
+      - "CCS"
+      - "CHAdeMO" 
+      - "Type2"
+      - "Tesla"
+    pricing:
+      # Production pricing
+      per-kwh-rate: 0.25
+      per-minute-rate: 0.05
+      idle-fee-per-minute: 0.10
+      peak-hour-multiplier: 1.5
+      off-peak-discount: 0.15
+    maintenance:
+      auto-disable-on-error: true
+      max-error-count: 5
+      error-cooldown-minutes: 30  # Longer for production
+      scheduled-maintenance-window: "02:00-05:00"
+    monitoring:
+      enable-real-time-alerts: true
+      temperature-threshold-celsius: 60
+      power-fluctuation-threshold-percent: 10
+      enable-predictive-maintenance: true
+      data-retention-days: 365
+    security:
+      enable-firmware-validation: true
+      require-secure-communication: true
+      certificate-validation: true
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://chargeroute:Admin123!@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Production - standard heartbeat
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# Production logging - restricted
+logging:
+  level:
+    com.chargeroute.chargeunit: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    root: WARN
+  file:
+    name: logs/charge-unit-management-service.log
+    max-size: 100MB
+    max-history: 30

@@ -1,0 +1,95 @@
+# Notification Management Service Configuration for Production Environment
+server:
+  port: 0  # Dynamic port assignment
+
+# EV Charging Business Configuration - Production Values
+chargeroute:
+  notification:
+    # Production - enterprise-grade notifications
+    email:
+      enabled: true
+      smtp-host: ${SMTP_HOST:smtp.chargeroute.com}
+      smtp-port: ${SMTP_PORT:587}
+      username: ${SMTP_USERNAME:notifications@chargeroute.com}
+      password: ${SMTP_PASSWORD:changeme}
+      from-address: "noreply@chargeroute.com"
+      from-name: "ChargeRoute"
+      use-tls: true
+      connection-timeout-ms: 5000
+    sms:
+      enabled: true
+      provider: ${SMS_PROVIDER:twilio}
+      api-key: ${SMS_API_KEY:changeme}
+      api-secret: ${SMS_API_SECRET:changeme}
+      from-number: ${SMS_FROM_NUMBER:+1234567890}
+      rate-limit-per-minute: 100
+    push:
+      enabled: true
+      provider: ${PUSH_PROVIDER:fcm}
+      api-key: ${PUSH_API_KEY:changeme}
+      rate-limit-per-minute: 1000
+    templates:
+      # Production templates - professional tone
+      session-started: "Charging session started at {stationName}. Track your progress in the ChargeRoute app."
+      session-completed: "Charging complete! Energy: {energyConsumed}kWh, Cost: ${cost}. Receipt available in app."
+      session-error: "Charging session interrupted at {stationName}. Please try another station or contact support."
+      payment-processed: "Payment of ${amount} processed for charging session. Thank you for using ChargeRoute!"
+      membership-upgraded: "Welcome to {membershipType}! Enjoy your enhanced benefits and savings."
+      account-locked: "Account temporarily locked for security. Contact support to unlock."
+      station-maintenance: "Station {stationName} is temporarily unavailable for maintenance. Expected return: {returnTime}"
+    preferences:
+      # Production - respect user preferences
+      allow-email: true
+      allow-sms: true
+      allow-push: true
+      quiet-hours-enabled: true
+      quiet-hours-start: "22:00"
+      quiet-hours-end: "07:00"
+      timezone-aware: true
+    delivery:
+      # Production - optimized batch processing
+      batch-size: 100
+      retry-attempts: 5
+      retry-delay-seconds: 30
+      enable-dead-letter-queue: true
+      dead-letter-retention-days: 7
+      enable-delivery-tracking: true
+    analytics:
+      enable-open-tracking: true
+      enable-click-tracking: true
+      retention-days: 90
+
+# Service-to-Service Communication
+integration:
+  services:
+    user-management:
+      base-url: http://user-management-service
+      timeout-ms: 3000
+      retry-attempts: 3
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://chargeroute:Admin123!@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Production - standard heartbeat
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# Production logging - restricted
+logging:
+  level:
+    com.chargeroute.notification: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    root: WARN
+  file:
+    name: logs/notification-management-service.log
+    max-size: 100MB
+    max-history: 30

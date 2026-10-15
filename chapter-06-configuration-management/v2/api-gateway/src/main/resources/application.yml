@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: "optional:configserver:http://configuser:configpass@localhost:8888"
+
+# Minimal local config - everything else comes from Config Server
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+
+---
+# Docker profile configuration  
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:http://configuser:configpass@config-server:8888"

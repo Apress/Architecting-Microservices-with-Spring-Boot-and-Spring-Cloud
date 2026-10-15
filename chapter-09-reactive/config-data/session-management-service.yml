@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: session-management-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000/realms/ev-charging
+      client:
+        registration:
+          session-service-client:
+            provider: keycloak
+            client-id: ${client-id}
+            client-secret: ${client-secret}
+            authorization-grant-type: client_credentials
+            scope: service.internal
+        provider:
+          keycloak:
+            token-uri: http://localhost:9000/realms/ev-charging/protocol/openid-connect/token
+  # R2DBC Configuration - Reactive database connection
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5433/sessiondb
+    username: sessionservice
+    password: ${spring.datasource.password}
+    pool:
+      initial-size: 10
+      max-size: 50
+      max-idle-time: 30m
+      max-acquire-time: 3s
+  # Flyway uses its own JDBC connection (R2DBC apps don't auto-configure a DataSource)
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://localhost:5433/sessiondb
+    user: sessionservice
+    password: ${spring.datasource.password}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka.username}:${eureka.password}@localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}

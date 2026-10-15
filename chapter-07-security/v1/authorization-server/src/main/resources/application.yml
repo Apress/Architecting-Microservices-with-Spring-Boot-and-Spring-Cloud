@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: authorization-server
+
+server:
+  port: 9000
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    com.chargeroute: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

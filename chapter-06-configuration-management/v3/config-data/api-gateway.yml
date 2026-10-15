@@ -1,0 +1,197 @@
+# API Gateway Configuration for Production Environment
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # Global CORS configuration for production
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "https://app.chargeroute.com"     # Production web app
+                  - "https://admin.chargeroute.com"   # Production admin dashboard
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: "*"
+                allowCredentials: true
+                maxAge: 3600
+
+          # Default filters for production
+          default-filters:
+            - name: DedupeResponseHeader
+              args:
+                name: Access-Control-Allow-Origin Access-Control-Allow-Credentials
+            - name: AddRequestHeader
+              args:
+                name: X-Gateway-Name
+                value: ChargeRoute-API-Gateway
+            - name: AddRequestHeader
+              args:
+                name: X-Request-ID
+                value: "${random.uuid}"
+            - name: AddRequestHeader
+              args:
+                name: X-Environment
+                value: production
+
+          # Enable automatic route discovery from Eureka
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+
+          # Custom route definitions with production resilience
+          routes:
+            # User Management Service Routes
+            - id: user-service-route
+              uri: lb://user-management-service
+              predicates:
+                - Path=/api/users/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: user-service-cb
+                    fallbackUri: forward:/fallback/users
+                - name: Retry
+                  args:
+                    retries: 3
+                    statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+                    backoff:
+                      firstBackoff: 50ms
+                      maxBackoff: 500ms
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: user-management
+
+            # Charge Unit Management Service Routes
+            - id: charge-unit-service-route
+              uri: lb://charge-unit-management-service
+              predicates:
+                - Path=/api/charge-units/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: charge-unit-service-cb
+                    fallbackUri: forward:/fallback/charge-units
+                - name: Retry
+                  args:
+                    retries: 3
+                    statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: charge-unit-management
+
+            # Session Management Service Routes
+            - id: session-service-route
+              uri: lb://session-management-service
+              predicates:
+                - Path=/api/sessions/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: session-service-cb
+                    fallbackUri: forward:/fallback/sessions
+                - name: Retry
+                  args:
+                    retries: 3
+                    statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: session-management
+
+            # Notification Management Service Routes
+            - id: notification-service-route
+              uri: lb://notification-management-service
+              predicates:
+                - Path=/api/notifications/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: notification-service-cb
+                    fallbackUri: forward:/fallback/notifications
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Route
+                    value: notification-management
+
+            # Gateway actuator endpoints
+            - id: gateway-actuator-route
+              uri: http://localhost:8080
+              predicates:
+                - Path=/actuator/**
+              filters:
+                - name: AddRequestHeader
+                  args:
+                    name: X-Internal-Request
+                    value: gateway-actuator
+
+          # Production HTTP client settings
+          httpclient:
+            connect-timeout: 5000
+            response-timeout: 10s
+
+    # Production circuit breaker settings
+    circuitbreaker:
+      resilience4j:
+        configs:
+          default:
+            failure-rate-threshold: 50
+            wait-duration-in-open-state: 30s
+            sliding-window-size: 10
+            minimum-number-of-calls: 5
+
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://chargeroute:Admin123!@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Production - standard heartbeat
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      zone: production
+      version: 1.0.0
+      type: api-gateway
+
+# Health check configuration - disable Redis
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+  endpoint:
+    health:
+      show-details: always
+  health:
+    redis:
+      enabled: false
+
+# Production logging - restricted
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.chargeroute.gateway: INFO
+    reactor.netty.http.client: WARN
+    root: WARN
+  file:
+    name: logs/api-gateway.log
+    max-size: 100MB
+    max-history: 30

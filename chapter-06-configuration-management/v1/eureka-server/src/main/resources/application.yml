@@ -1,0 +1,16 @@
+# Minimal local config - most settings come from Config Server
+spring:
+  application:
+    name: eureka-server
+  config:
+    import: "optional:configserver:http://configuser:configpass@localhost:8888"
+  profiles:
+    active: default
+
+---
+# Docker profile configuration
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:http://configuser:configpass@config-server:8888"

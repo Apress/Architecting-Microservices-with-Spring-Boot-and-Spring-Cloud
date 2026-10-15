@@ -1,0 +1,54 @@
+# Charge Unit Management Service Configuration for Development Environment
+server:
+  port: 0  # Dynamic port assignment
+
+# EV Charging Business Configuration - Development Values
+chargeroute:
+  chargeunit:
+    # Development - shorter intervals for testing
+    status-check-interval-seconds: 10
+    maintenance-check-interval-hours: 1
+    max-concurrent-sessions: 2  # Lower for dev testing
+    default-power-rating-kw: 50.0
+    supported-connector-types:
+      - "CCS"
+      - "CHAdeMO" 
+      - "Type2"
+    pricing:
+      # Development pricing - lower costs
+      per-kwh-rate: 0.15
+      per-minute-rate: 0.03
+      idle-fee-per-minute: 0.05
+      peak-hour-multiplier: 1.2
+    maintenance:
+      auto-disable-on-error: true
+      max-error-count: 3
+      error-cooldown-minutes: 5  # Shorter for dev
+    monitoring:
+      enable-real-time-alerts: true
+      temperature-threshold-celsius: 40
+      power-fluctuation-threshold-percent: 15
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://chargeroute:Admin123!@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Development - faster heartbeat
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+
+# Development logging
+logging:
+  level:
+    com.chargeroute.chargeunit: DEBUG
+    org.springframework.web: DEBUG
+  file:
+    name: logs/charge-unit-management-service.log
+    max-size: 100MB
+    max-history: 30
